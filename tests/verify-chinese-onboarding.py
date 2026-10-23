@@ -20,6 +20,8 @@ sections = ("## 你想怎么做？", "## 开始使用", "## A · 导演模式画
             "## B · 自动成片画风一览", "## 使用小贴士", "## 最近更新")
 assert [cn.index(s) for s in sections] == sorted(cn.index(s) for s in sections)
 assert "一次安装，按需选择" in cn
+assert "[查看画风一览 ↓]" not in cn, "Do not restore the removed per-mode shortcut links"
+assert "[A 画风](#a-styles) · [B 画风](#b-styles)" in cn, "Keep the top style navigation"
 assert "不需要另装第二个 Skill" in cn
 assert "**10 分钟及以上**" in cn and "连续故事短剧" in cn
 assert "Codex、Claude Code" in cn and "Google Flow" in cn

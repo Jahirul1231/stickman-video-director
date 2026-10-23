@@ -88,8 +88,6 @@ Autopilot 需要可用的图像、配音等生成服务与本地视频合成环�
 
 ### A · Director：逐段生成，自己掌镜
 
-[查看画风一览 ↓](#a-styles)
-
 把下面这段发给支持 Skill 的 AI 助手，换成自己的话题即可；也可以直接贴已有文案或文章：
 
 ```text
@@ -129,8 +127,6 @@ https://github.com/kaomei/stickman-video-director
 <a id="autopilot-start"></a>
 
 ### B · Autopilot：自动制作，直接拿成片
-
-[查看画风一览 ↓](#b-styles)
 
 在 Codex、Claude Code 等具备文件与命令执行能力的环境中，安装后这样说：
 
