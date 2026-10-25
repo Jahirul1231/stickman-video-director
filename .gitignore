@@ -6,3 +6,7 @@ node_modules/
 __pycache__/
 *.pyc
 autopilot-work/
+stickman-engine/node_modules/
+stickman-engine/out/
+skills/**/projects/
+
