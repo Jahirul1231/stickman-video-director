@@ -29,6 +29,10 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
+      transition: max-width 0.3s ease;
+    }
+    .studio-container.vertical-mode {
+      max-width: 620px;
     }
     .header {
       display: flex;
@@ -39,7 +43,7 @@
     .title-group {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
     .badge {
       background: linear-gradient(135deg, #00f0ff, #0077ff);
@@ -67,9 +71,11 @@
       border-radius: 10px;
       box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
       align-items: center;
+      flex-wrap: wrap;
     }
     .command-input {
       flex: 1;
+      min-width: 200px;
       background: transparent;
       border: none;
       outline: none;
@@ -102,15 +108,32 @@
       border-color: #00f0ff;
       box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
     }
+    .quick-preset-btn.story-mode {
+      border-color: #f59e0b;
+      color: #f59e0b;
+    }
+    .quick-preset-btn.story-mode.active {
+      background: #f59e0b;
+      color: #000;
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+    }
 
     .canvas-wrapper {
       position: relative;
       width: 100%;
-      aspect-ratio: 16 / 9;
       background: #020306;
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      transition: aspect-ratio 0.3s ease;
+    }
+    .canvas-wrapper.ratio-16-9 {
+      aspect-ratio: 16 / 9;
+    }
+    .canvas-wrapper.ratio-9-16 {
+      aspect-ratio: 9 / 16;
+      max-height: 75vh;
+      margin: 0 auto;
     }
     canvas {
       width: 100%;
@@ -138,7 +161,7 @@
       font-weight: 600;
       font-variant-numeric: tabular-nums;
       color: #94a3b8;
-      width: 85px;
+      width: 95px;
     }
     .timeline-slider {
       flex: 1;
@@ -164,11 +187,14 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
     }
     .btn-group {
       display: flex;
       align-items: center;
       gap: 8px;
+      flex-wrap: wrap;
     }
     button {
       background: #1e293b;
@@ -231,37 +257,42 @@
   </style>
 </head>
 <body>
-  <div class="studio-container">
+  <div class="studio-container" id="studioContainer">
     <div class="header">
       <div class="title-group">
-        <span class="badge">STEP 1 ACTIVE</span>
+        <span class="badge">STEP 2 ACTIVE</span>
         <h1>Claude-Style Stickman Sakuga Studio</h1>
       </div>
       <div style="font-size: 12px; color: #64748b; font-weight: 600;">
-        PROMPT COMMANDS · WEAPONS & SUPERNATURAL VFX · 60 FPS
+        MULTI-SCENE DIRECTOR · 9:16 SHORTS · ANIMATED SUBTITLES
       </div>
     </div>
 
-    <!-- 💬 Prompt Command Bar -->
+    <!-- 💬 Prompt Command Bar & Multi-Scene Presets -->
     <div class="command-bar-wrapper">
       <span style="font-size: 15px;">💬</span>
-      <input type="text" id="commandInput" class="command-input" placeholder="Type an animation prompt (e.g., 'Katana clash', 'Energy blast', 'Teleportation strike')...">
-      <button id="commandSubmit" class="primary" style="padding: 5px 12px;">Run Prompt</button>
+      <input type="text" id="commandInput" class="command-input" placeholder="Type a prompt (e.g., 'Full 3-scene story', 'Katana clash', 'Energy blast', '9:16 Shorts')...">
+      <button id="commandSubmit" class="primary" style="padding: 5px 12px;">Run</button>
       <div style="width: 1px; height: 18px; background: rgba(255,255,255,0.15); margin: 0 4px;"></div>
-      <button class="quick-preset-btn active" data-choreography="katana">⚔️ Katana Duel</button>
+      
+      <!-- Multi-Scene Story Mode -->
+      <button class="quick-preset-btn story-mode active" data-choreography="story">🎬 Full 3-Scene Story</button>
+      
+      <!-- Single Action Presets -->
+      <button class="quick-preset-btn" data-choreography="katana">⚔️ Katana Duel</button>
       <button class="quick-preset-btn" data-choreography="energy">⚡ Energy Blast</button>
       <button class="quick-preset-btn" data-choreography="teleport">🌀 Teleport Clash</button>
       <button class="quick-preset-btn" data-choreography="martial">🥋 Martial Arts</button>
     </div>
 
-    <div class="canvas-wrapper">
+    <div class="canvas-wrapper ratio-16-9" id="canvasWrapper">
       <canvas id="viewport" width="1920" height="1080"></canvas>
     </div>
 
     <div class="controls-panel">
       <div class="timeline-row">
-        <div class="time-label" id="timeDisplay">0.00s / 10.0s</div>
-        <input type="range" id="timeline" class="timeline-slider" min="0" max="600" value="0">
+        <div class="time-label" id="timeDisplay">0.00s / 15.0s</div>
+        <input type="range" id="timeline" class="timeline-slider" min="0" max="900" value="0">
       </div>
       <div class="buttons-row">
         <div class="btn-group">
@@ -273,6 +304,10 @@
             <option value="1.0" selected>1.0x (Normal)</option>
             <option value="1.5">1.5x (Fast)</option>
           </select>
+          <!-- Aspect Ratio Toggle -->
+          <button id="ratioToggleBtn">📱 Mode: 16:9 Landscape</button>
+          <!-- Subtitle Toggle -->
+          <button id="subtitlesToggleBtn">💬 Subtitles: ON</button>
         </div>
         <div class="btn-group">
           <button id="soundToggleBtn">🔊 Sound: ON</button>
@@ -285,6 +320,8 @@
   <script>
     const canvas = document.getElementById('viewport');
     const ctx = canvas.getContext('2d');
+    const canvasWrapper = document.getElementById('canvasWrapper');
+    const studioContainer = document.getElementById('studioContainer');
     const playBtn = document.getElementById('playBtn');
     const restartBtn = document.getElementById('restartBtn');
     const timeline = document.getElementById('timeline');
@@ -292,17 +329,49 @@
     const speedSelect = document.getElementById('speedSelect');
     const recordBtn = document.getElementById('recordBtn');
     const soundToggleBtn = document.getElementById('soundToggleBtn');
+    const ratioToggleBtn = document.getElementById('ratioToggleBtn');
+    const subtitlesToggleBtn = document.getElementById('subtitlesToggleBtn');
     const commandInput = document.getElementById('commandInput');
     const commandSubmit = document.getElementById('commandSubmit');
     const presetBtns = document.querySelectorAll('.quick-preset-btn');
 
-    const TOTAL_FRAMES = 600; // 10.0 seconds at 60 FPS
+    // State Variables
+    let isVertical = false; // false = 16:9 (1920x1080), true = 9:16 (1080x1920)
+    let showSubtitles = true;
+    let activeChoreography = 'story'; // 'story' (15s) | 'katana' | 'energy' | 'teleport' | 'martial' (10s)
+    let totalFrames = 900; // 15.0s for story mode, 600 (10s) for single clips
     let currentFrame = 0;
     let isPlaying = true;
     let playbackSpeed = 1.0;
     let isRecording = false;
     let soundEnabled = true;
-    let activeChoreography = 'katana'; // 'katana' | 'energy' | 'teleport' | 'martial'
+
+    // Aspect Ratio Configuration
+    function setAspectRatio(vertical) {
+      isVertical = vertical;
+      if (isVertical) {
+        canvas.width = 1080;
+        canvas.height = 1920;
+        canvasWrapper.className = 'canvas-wrapper ratio-9-16';
+        studioContainer.classList.add('vertical-mode');
+        ratioToggleBtn.textContent = '📱 Mode: 9:16 Shorts / TikTok';
+      } else {
+        canvas.width = 1920;
+        canvas.height = 1080;
+        canvasWrapper.className = 'canvas-wrapper ratio-16-9';
+        studioContainer.classList.remove('vertical-mode');
+        ratioToggleBtn.textContent = '🖥️ Mode: 16:9 Landscape';
+      }
+    }
+
+    ratioToggleBtn.addEventListener('click', () => {
+      setAspectRatio(!isVertical);
+    });
+
+    subtitlesToggleBtn.addEventListener('click', () => {
+      showSubtitles = !showSubtitles;
+      subtitlesToggleBtn.textContent = showSubtitles ? '💬 Subtitles: ON' : '💬 Subtitles: OFF';
+    });
 
     // Preset Switching
     function setChoreography(type) {
@@ -310,6 +379,8 @@
       presetBtns.forEach(btn => {
         btn.classList.toggle('active', btn.dataset.choreography === type);
       });
+      totalFrames = (type === 'story') ? 900 : 600;
+      timeline.max = totalFrames;
       currentFrame = 0;
       timeline.value = 0;
     }
@@ -326,13 +397,21 @@
     function handleCommand() {
       const q = commandInput.value.toLowerCase().trim();
       if (!q) return;
-      if (q.includes('energy') || q.includes('beam') || q.includes('blast') || q.includes('laser')) {
+      if (q.includes('9:16') || q.includes('vertical') || q.includes('short') || q.includes('tiktok') || q.includes('reel')) {
+        setAspectRatio(true);
+      } else if (q.includes('16:9') || q.includes('landscape') || q.includes('horizontal') || q.includes('wide')) {
+        setAspectRatio(false);
+      }
+      
+      if (q.includes('story') || q.includes('all') || q.includes('scene') || q.includes('full')) {
+        setChoreography('story');
+      } else if (q.includes('energy') || q.includes('beam') || q.includes('blast') || q.includes('laser')) {
         setChoreography('energy');
       } else if (q.includes('teleport') || q.includes('flash') || q.includes('portal') || q.includes('shunpo')) {
         setChoreography('teleport');
       } else if (q.includes('martial') || q.includes('punch') || q.includes('kick') || q.includes('kung fu')) {
         setChoreography('martial');
-      } else {
+      } else if (q.includes('katana') || q.includes('sword') || q.includes('blade')) {
         setChoreography('katana');
       }
       commandInput.value = '';
@@ -359,7 +438,6 @@
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(t); osc.stop(t + 0.14);
       } else if (type === 'swordClang') {
-        // Metallic dual chime
         [1600, 2400].forEach(freq => {
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
@@ -431,7 +509,6 @@
       }
     }
 
-    // Easing helpers
     function easeOutBack(x) {
       const c1 = 1.70158;
       const c3 = c1 + 1;
@@ -444,7 +521,6 @@
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(angle);
-      // Glowing Blade
       ctx.strokeStyle = color;
       ctx.shadowColor = color;
       ctx.shadowBlur = 18;
@@ -453,14 +529,12 @@
       ctx.moveTo(0, 0);
       ctx.lineTo(length, 0);
       ctx.stroke();
-      // White core
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(0, 0);
       ctx.lineTo(length - 5, 0);
       ctx.stroke();
-      // Tsuba (guard)
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(-2, -6, 4, 12);
       ctx.restore();
@@ -475,7 +549,6 @@
       ctx.beginPath();
       ctx.arc(x, y, radius, startAngle, endAngle);
       ctx.stroke();
-      // Inner bright core
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 4;
       ctx.beginPath();
@@ -496,7 +569,6 @@
       ctx.lineTo(endX, endY);
       ctx.stroke();
 
-      // Inner white blast core
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = radius * 0.4;
       ctx.beginPath();
@@ -504,7 +576,6 @@
       ctx.lineTo(endX, endY);
       ctx.stroke();
 
-      // Energy sparks along beam
       for (let i = 0; i < 4; i++) {
         const t = Math.random();
         const px = lerp(startX, endX, t) + (Math.random() - 0.5) * 40;
@@ -546,12 +617,10 @@
       ctx.shadowColor = color;
       ctx.shadowBlur = 18;
 
-      // Head
       ctx.beginPath();
       ctx.arc(0, -torsoLen - headSize, headSize, 0, Math.PI * 2);
       ctx.fill();
 
-      // Torso
       ctx.beginPath();
       ctx.moveTo(0, 0);
       ctx.lineTo(0, -torsoLen);
@@ -572,16 +641,64 @@
       ctx.restore();
     }
 
+    // Cinematic Subtitles Renderer
+    function drawCinematicSubtitle(ctx, speaker, text, color = '#00f0ff') {
+      if (!showSubtitles || !text) return;
+      ctx.save();
+      const subY = canvas.height - (isVertical ? 260 : 130);
+      
+      // Glassmorphic background badge
+      ctx.font = '600 28px -apple-system, sans-serif';
+      const fullText = speaker ? `[${speaker}]: ${text}` : text;
+      const textWidth = ctx.measureText(fullText).width;
+      
+      ctx.fillStyle = 'rgba(5, 7, 14, 0.75)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 1.5;
+      const padX = 24, padY = 12;
+      const bgX = (canvas.width - textWidth) / 2 - padX;
+      const bgY = subY - 32 - padY / 2;
+      
+      ctx.beginPath();
+      ctx.roundRect(bgX, bgY, textWidth + padX * 2, 48 + padY, 12);
+      ctx.fill();
+      ctx.stroke();
+
+      // Speaker Prefix
+      ctx.textAlign = 'center';
+      if (speaker) {
+        ctx.fillStyle = color;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 10;
+        ctx.fillText(`[${speaker}]: `, (canvas.width - textWidth) / 2 + ctx.measureText(`[${speaker}]: `).width / 2, subY);
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = 'transparent';
+        ctx.fillText(text, (canvas.width - textWidth) / 2 + ctx.measureText(`[${speaker}]: `).width + ctx.measureText(text).width / 2, subY);
+      } else {
+        ctx.fillStyle = color;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 12;
+        ctx.fillText(text, canvas.width / 2, subY);
+      }
+      ctx.restore();
+    }
+
     // Main Render Pipeline
     function render(f) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      let camX = 0, camY = 0, camScale = 1.0, screenShake = 0;
+      let camX = 0, camY = 0, camScale = isVertical ? 0.8 : 1.0, screenShake = 0;
       let overlayTitle = '', overlaySubtitle = '';
-      const groundY = 820;
+      let subtitleSpeaker = '', subtitleText = '', subtitleColor = '#00f0ff';
+      
+      // Ground plane adapts to vertical / horizontal
+      const groundY = isVertical ? 1400 : 820;
+      const centerStageX = canvas.width / 2;
+      const stageOffset = isVertical ? 320 : 460;
 
-      let cyanX = 500, cyanY = groundY, cyanAngle = 0;
-      let redX = 1420, redY = groundY, redAngle = 0;
+      let cyanX = centerStageX - stageOffset, cyanY = groundY, cyanAngle = 0;
+      let redX = centerStageX + stageOffset, redY = groundY, redAngle = 0;
 
       let c_la = { jx: -30, jy: -60, hx: -50, hy: -40 };
       let c_ra = { jx: 30, jy: -60, hx: 50, hy: -40 };
@@ -599,42 +716,162 @@
       let drawBeam = false, beamParams = null;
       let cyanAura = false, redAura = false;
 
+      // ==============================================================
+      // 🎬 MULTI-SCENE STORY DIRECTOR (15.0s Narrative Arc)
+      // ==============================================================
+      if (activeChoreography === 'story') {
+        // --- SCENE 1: CONFRONTATION & TENSION (0s - 4.5s / Frames 0 - 270) ---
+        if (f < 270) {
+          overlayTitle = 'SCENE I: CONFRONTATION';
+          overlaySubtitle = 'ARENA STANDOFF';
+          
+          if (f < 135) {
+            subtitleSpeaker = 'CYAN';
+            subtitleText = 'You shouldn\'t have come back, Crimson.';
+            subtitleColor = '#00f0ff';
+          } else {
+            subtitleSpeaker = 'CRIMSON';
+            subtitleText = 'Only one of us leaves this arena.';
+            subtitleColor = '#ff0055';
+          }
+
+          const breathe = Math.sin(f * 0.08) * 8;
+          cyanY += breathe;
+          redY -= breathe;
+          camScale *= (1.0 + (f / 270) * 0.08);
+          
+          // Draw weapons at ready
+          hasKatanaCyan = true; katanaCyanAngle = -0.5;
+          hasKatanaRed = true; katanaRedAngle = -2.6;
+        }
+        // --- SCENE 2: WEAPON CLASH & ENERGY ESCALATION (4.5s - 9.5s / Frames 270 - 570) ---
+        else if (f < 570) {
+          const sf = f - 270; // 0 to 300
+          overlayTitle = 'SCENE II: CLASH OF BLADES';
+          overlaySubtitle = 'WEAPONS DRAWN & HYPER BEAM';
+          hasKatanaCyan = true; hasKatanaRed = true;
+
+          if (sf < 150) {
+            subtitleSpeaker = '';
+            subtitleText = 'HIGH-SPEED WEAPONS CLASH // 60 FPS';
+            subtitleColor = '#f59e0b';
+
+            // High speed rush
+            const dashT = Math.min(1, sf / 30);
+            cyanX = lerp(centerStageX - stageOffset, centerStageX - 70, easeOutBack(dashT));
+            redX = lerp(centerStageX + stageOffset, centerStageX + 70, easeOutBack(dashT));
+
+            katanaCyanAngle = Math.sin(sf * 0.4) * 1.5;
+            katanaRedAngle = -Math.PI + Math.cos(sf * 0.4) * 1.5;
+
+            if (sf % 12 === 0) {
+              playSfx('swordClang');
+              spawnSparks(centerStageX, groundY - 70, 15, '#ffffff');
+              spawnSparks(centerStageX, groundY - 70, 12, '#00f0ff');
+              screenShake = 8;
+            }
+          } else {
+            // Energy escalation
+            subtitleSpeaker = 'CRIMSON';
+            subtitleText = 'WITNESS ABSOLUTE DESTRUCTION!';
+            subtitleColor = '#ff0055';
+
+            drawBeam = true;
+            redAura = true;
+            beamParams = { sx: redX - 40, sy: groundY - 70, ex: 100, ey: groundY - 70, w: 50, col: '#ff0055' };
+            if (sf === 151) playSfx('laser');
+
+            // Cyan sliding dodge
+            const t = (sf - 150) / 150;
+            cyanX = lerp(centerStageX - 70, centerStageX - 250, t);
+            cyanY = groundY + 30;
+            cyanAngle = 0.8;
+            cyanAura = true;
+            screenShake = 6;
+          }
+        }
+        // --- SCENE 3: BULLET-TIME CLIMAX & KNOCKOUT (9.5s - 15.0s / Frames 570 - 900) ---
+        else {
+          const sf = f - 570; // 0 to 330
+          if (sf < 160) {
+            // 0.15x Bullet Time Aerial Orbit
+            overlayTitle = '● SCENE III: BULLET-TIME ORBIT';
+            overlaySubtitle = '0.15X SAKUGA DILATION';
+            subtitleSpeaker = 'CYAN';
+            subtitleText = 'This ends now.';
+            subtitleColor = '#00f0ff';
+
+            const t = sf / 160;
+            cyanX = centerStageX - 60; cyanY = groundY - 380;
+            redX = centerStageX + 80; redY = groundY - 360;
+
+            cyanAngle = t * Math.PI * 1.8;
+            c_rl.jx = 80; c_rl.jy = -40; c_rl.hx = 140; c_rl.hy = -20;
+            camX = Math.sin(t * Math.PI * 1.5) * 140;
+            camScale *= 1.25;
+
+            if (sf === 1) playSfx('bulletTime');
+          } else {
+            // Critical Slam & Hero Landing
+            overlayTitle = 'CRITICAL IMPACT';
+            overlaySubtitle = 'KNOCKOUT VICTORY';
+            subtitleSpeaker = '';
+            subtitleText = 'CRITICAL K.O. // WINNER: CYAN STRIKER';
+            subtitleColor = '#00f0ff';
+
+            const t = (sf - 160) / 170;
+            if (sf < 172) {
+              screenShake = 32;
+              if (sf === 162) {
+                playSfx('hit');
+                spawnSparks(centerStageX, groundY - 380, 60, '#ffffff');
+                spawnSparks(centerStageX, groundY - 380, 45, '#ff0055');
+              }
+            }
+            cyanX = centerStageX - 100; cyanY = groundY;
+            redX = centerStageX + 420; redY = groundY + 40; redAngle = -Math.PI / 2;
+            c_la = { jx: 10, jy: 30, hx: 20, hy: 70 };
+            c_rl = { jx: 60, jy: 40, hx: 90, hy: 80 };
+            c_ll = { jx: -50, jy: 60, hx: -80, hy: 85 };
+          }
+        }
+      }
+
       // ==========================================
       // CHOREOGRAPHY 1: ⚔️ KATANA DUEL
       // ==========================================
-      if (activeChoreography === 'katana') {
+      else if (activeChoreography === 'katana') {
         hasKatanaCyan = true;
         hasKatanaRed = true;
 
         if (f < 90) {
           overlayTitle = 'BLADE STANCE';
           overlaySubtitle = 'PLASMA KATANA READY';
+          subtitleText = 'CYAN VS CRIMSON // BLADES DRAWN';
           katanaCyanAngle = -0.6;
           katanaRedAngle = -2.5;
         } else if (f < 240) {
-          // Dash & Rapid Sword Clash
           const dashT = Math.min(1, (f - 90) / 35);
-          cyanX = lerp(500, 880, easeOutBack(dashT));
-          redX = lerp(1420, 1040, easeOutBack(dashT));
+          cyanX = lerp(centerStageX - stageOffset, centerStageX - 80, easeOutBack(dashT));
+          redX = lerp(centerStageX + stageOffset, centerStageX + 80, easeOutBack(dashT));
 
           katanaCyanAngle = Math.sin(f * 0.4) * 1.5;
           katanaRedAngle = -Math.PI + Math.cos(f * 0.4) * 1.5;
 
           if (f % 14 === 0) {
             playSfx('swordClang');
-            spawnSparks((cyanX + redX) / 2 + 10, groundY - 70, 16, '#ffffff');
-            spawnSparks((cyanX + redX) / 2 + 10, groundY - 70, 12, '#00f0ff');
+            spawnSparks(centerStageX, groundY - 70, 16, '#ffffff');
+            spawnSparks(centerStageX, groundY - 70, 12, '#00f0ff');
             screenShake = 7;
           }
-          camScale = 1.15;
+          camScale *= 1.15;
           overlayTitle = 'CLASH OF BLADES';
           overlaySubtitle = 'HIGH VELOCITY DEFLECTION';
         } else if (f < 360) {
-          // Aerial Launch with Curved Slash Arc
           const t = (f - 240) / 120;
           const leap = Math.sin(t * Math.PI) * 360;
-          cyanX = lerp(880, 800, t); cyanY = groundY - leap;
-          redX = lerp(1040, 1120, t); redY = groundY - leap * 1.1;
+          cyanX = lerp(centerStageX - 80, centerStageX - 140, t); cyanY = groundY - leap;
+          redX = lerp(centerStageX + 80, centerStageX + 160, t); redY = groundY - leap * 1.1;
 
           katanaCyanAngle = t * Math.PI * 3;
           katanaRedAngle = -t * Math.PI * 2;
@@ -642,42 +879,38 @@
           drawSlash = true;
           slashParams = { x: cyanX, y: cyanY - 80, r: 160, s: t * 4, e: t * 4 + 1.6, col: '#00f0ff' };
 
-          camScale = 1.25;
+          camScale *= 1.25;
           overlayTitle = 'AERIAL SAKUGA';
           overlaySubtitle = '360° CRESCENT SLICE';
         } else if (f < 480) {
-          // Bullet Time Sword Lock
           overlayTitle = '● BULLET TIME · BLADE LOCK';
           overlaySubtitle = '0.15X SPATIAL SUSPENSION';
           const t = (f - 360) / 120;
-          cyanX = 890; cyanY = 460;
-          redX = 1030; redY = 460;
+          cyanX = centerStageX - 70; cyanY = 460;
+          redX = centerStageX + 70; redY = 460;
           katanaCyanAngle = -0.3;
           katanaRedAngle = -2.8;
 
           camX = Math.sin(t * Math.PI * 1.5) * 140;
-          camScale = 1.38;
+          camScale *= 1.38;
           cyanAura = true; redAura = true;
 
           if (f === 361) playSfx('bulletTime');
         } else {
-          // Final Critical Strike & Sheathe
           overlayTitle = 'CRITICAL SLASH';
           overlaySubtitle = 'ONE-STRIKE FINISH';
-          const t = (f - 480) / 120;
           if (f < 490) {
             screenShake = 30;
             if (f === 482) {
               playSfx('swordClang');
               playSfx('hit');
-              spawnSparks(960, 460, 60, '#ffffff');
-              spawnSparks(960, 460, 40, '#00f0ff');
+              spawnSparks(centerStageX, 460, 60, '#ffffff');
+              spawnSparks(centerStageX, 460, 40, '#00f0ff');
             }
           }
-          cyanX = 1200; cyanY = groundY;
-          redX = 800; redY = groundY + 40; redAngle = Math.PI / 2;
+          cyanX = centerStageX + 240; cyanY = groundY;
+          redX = centerStageX - 160; redY = groundY + 40; redAngle = Math.PI / 2;
           katanaCyanAngle = -1.2;
-          camScale = 1.2;
         }
       }
 
@@ -688,23 +921,22 @@
         if (f < 120) {
           overlayTitle = 'AURA CHARGE';
           overlaySubtitle = 'CONCENTRATING PLASMA ENERGY';
+          subtitleSpeaker = 'CRIMSON';
+          subtitleText = 'Taste pure energy!';
+          subtitleColor = '#ff0055';
           redAura = true;
-          // Red charges a massive energy orb in hands
           r_ra.hx = -70; r_ra.hy = -60;
           r_la.hx = -50; r_la.hy = -60;
           if (f % 20 === 0) spawnSparks(redX - 60, groundY - 60, 6, '#ff0055');
         } else if (f < 320) {
-          // Crimson Fires Massive Laser Beam!
           drawBeam = true;
           redAura = true;
           beamParams = { sx: redX - 60, sy: groundY - 60, ex: 100, ey: groundY - 60, w: 55, col: '#ff0055' };
-
           if (f === 121) playSfx('laser');
 
-          // Cyan sliding dodge & deflection
           const t = (f - 120) / 200;
-          cyanX = lerp(500, 720, t);
-          cyanY = groundY + 30; // low slide
+          cyanX = lerp(centerStageX - stageOffset, centerStageX - 120, t);
+          cyanY = groundY + 30;
           cyanAngle = 0.8;
           cyanAura = true;
           screenShake = 8;
@@ -712,12 +944,14 @@
           overlayTitle = 'HYPER BEAM BLAST';
           overlaySubtitle = 'KINETIC ENERGY DISCHARGE';
         } else {
-          // Cyan Leap & Energy Counter Slam
           const t = (f - 320) / 280;
           overlayTitle = 'COUNTER COLLAPSE';
           overlaySubtitle = 'PLASMA SURGE FINISH';
+          subtitleSpeaker = 'CYAN';
+          subtitleText = 'Your beam is useless against speed.';
+          subtitleColor = '#00f0ff';
 
-          cyanX = lerp(720, redX - 60, Math.min(1, t * 1.5));
+          cyanX = lerp(centerStageX - 120, redX - 60, Math.min(1, t * 1.5));
           cyanY = groundY - Math.sin(t * Math.PI) * 400;
           cyanAura = true;
 
@@ -738,6 +972,7 @@
       else if (activeChoreography === 'teleport') {
         overlayTitle = 'INSTANT TELEPORTATION';
         overlaySubtitle = 'SHUNPO HIGH-SPEED FLASH';
+        subtitleText = 'HIGH-SPEED SPATIAL DISPLACEMENT';
 
         const step = Math.floor(f / 60);
         if (f % 60 === 0) {
@@ -745,16 +980,15 @@
           spawnSparks(cyanX, cyanY - 50, 18, '#00f0ff');
         }
         if (step % 2 === 0) {
-          cyanX = 600; cyanY = groundY;
-          redX = 1300; redY = groundY;
+          cyanX = centerStageX - 250; cyanY = groundY;
+          redX = centerStageX + 250; redY = groundY;
         } else {
-          // Instant transmission to behind Red!
-          cyanX = 1420; cyanY = groundY - 180;
-          redX = 1200; redY = groundY;
-          c_ra.hx = -80; // strike from behind
+          cyanX = centerStageX + 320; cyanY = groundY - 180;
+          redX = centerStageX + 160; redY = groundY;
+          c_ra.hx = -80;
           screenShake = 12;
         }
-        camScale = 1.25;
+        camScale *= 1.2;
       }
 
       // ==========================================
@@ -763,45 +997,44 @@
       else {
         overlayTitle = 'SAKUGA MARTIAL ARTS';
         overlaySubtitle = 'HAND-TO-HAND KINEMATICS';
+        subtitleText = 'CORE PHYSICAL KINEMATICS // SAKUGA SQUASH & STRETCH';
         if (f < 240) {
           const dashT = Math.min(1, (f - 60) / 35);
           if (f > 60) {
-            cyanX = lerp(500, 850, easeOutBack(dashT));
-            redX = lerp(1420, 1070, easeOutBack(dashT));
+            cyanX = lerp(centerStageX - stageOffset, centerStageX - 70, easeOutBack(dashT));
+            redX = lerp(centerStageX + stageOffset, centerStageX + 70, easeOutBack(dashT));
             const punch = Math.sin(f * 0.5);
             c_ra.hx = 80 * punch; r_la.hx = -80 * punch;
             if (f % 12 === 0) {
               playSfx('whoosh');
-              spawnSparks((cyanX + redX) / 2, groundY - 80, 8, '#ffffff');
+              spawnSparks(centerStageX, groundY - 80, 8, '#ffffff');
               screenShake = 6;
             }
           }
         } else if (f < 480) {
-          // Bullet time slow mo
           overlayTitle = '● BULLET TIME · 0.15X SLOW-MO';
           overlaySubtitle = 'MID-AIR 360° ROUNDHOUSE';
           const t = (f - 240) / 240;
-          cyanX = 860; cyanY = 460 + Math.sin(t * Math.PI) * 30;
-          redX = 1060; redY = 440;
+          cyanX = centerStageX - 80; cyanY = (isVertical ? 800 : 460) + Math.sin(t * Math.PI) * 30;
+          redX = centerStageX + 80; redY = (isVertical ? 780 : 440);
           cyanAngle = t * Math.PI * 1.8;
           c_rl.jx = 80; c_rl.jy = -40; c_rl.hx = 140; c_rl.hy = -20;
           camX = Math.sin(t * Math.PI * 1.5) * 120;
-          camScale = 1.35;
+          camScale *= 1.35;
           if (f === 241) playSfx('bulletTime');
         } else {
-          // Critical hit & landing
           overlayTitle = 'CRITICAL IMPACT';
           overlaySubtitle = 'HERO RECOVERY SLAM';
           if (f < 490) {
             screenShake = 26;
             if (f === 482) {
               playSfx('hit');
-              spawnSparks(980, 450, 45, '#ffffff');
-              spawnSparks(980, 450, 30, '#ff0055');
+              spawnSparks(centerStageX, (isVertical ? 800 : 450), 45, '#ffffff');
+              spawnSparks(centerStageX, (isVertical ? 800 : 450), 30, '#ff0055');
             }
           }
-          cyanX = 920; cyanY = groundY;
-          redX = 1680; redY = groundY + 40; redAngle = -Math.PI / 2;
+          cyanX = centerStageX - 100; cyanY = groundY;
+          redX = centerStageX + 380; redY = groundY + 40; redAngle = -Math.PI / 2;
         }
       }
 
@@ -836,7 +1069,7 @@
         drawSlashArc(ctx, slashParams.x, slashParams.y, slashParams.r, slashParams.s, slashParams.e, slashParams.col);
       }
 
-      // Draw Stickmen with curved limbs
+      // Draw Stickmen
       drawCurvedStickman(ctx, { x: cyanX, y: cyanY, angle: cyanAngle, color: '#00f0ff', leftArm: c_la, rightArm: c_ra, leftLeg: c_ll, rightLeg: c_rl, aura: cyanAura });
       drawCurvedStickman(ctx, { x: redX, y: redY, angle: redAngle, color: '#ff0055', leftArm: r_la, rightArm: r_ra, leftLeg: r_ll, rightLeg: r_rl, aura: redAura });
 
@@ -872,21 +1105,24 @@
       // Top Title Overlay
       if (overlayTitle) {
         ctx.save();
-        ctx.font = '900 48px -apple-system, sans-serif';
+        ctx.font = isVertical ? '900 42px -apple-system, sans-serif' : '900 48px -apple-system, sans-serif';
         ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'center';
         ctx.shadowColor = '#00f0ff';
         ctx.shadowBlur = 25;
-        ctx.fillText(overlayTitle, canvas.width / 2, 90);
+        ctx.fillText(overlayTitle, canvas.width / 2, isVertical ? 160 : 90);
 
         if (overlaySubtitle) {
-          ctx.font = '700 20px -apple-system, sans-serif';
+          ctx.font = isVertical ? '700 18px -apple-system, sans-serif' : '700 20px -apple-system, sans-serif';
           ctx.fillStyle = '#00f0ff';
           ctx.letterSpacing = '4px';
-          ctx.fillText(overlaySubtitle, canvas.width / 2, 130);
+          ctx.fillText(overlaySubtitle, canvas.width / 2, isVertical ? 205 : 130);
         }
         ctx.restore();
       }
+
+      // Bottom Animated Dialogue Subtitles
+      drawCinematicSubtitle(ctx, subtitleSpeaker, subtitleText, subtitleColor);
     }
 
     // Animation Loop
@@ -895,12 +1131,12 @@
       if (isPlaying) {
         const delta = (now - lastTime) / 1000;
         currentFrame += 60 * delta * playbackSpeed;
-        if (currentFrame >= TOTAL_FRAMES) {
+        if (currentFrame >= totalFrames) {
           if (isRecording) stopRecording();
           currentFrame = 0;
         }
         timeline.value = Math.floor(currentFrame);
-        timeDisplay.textContent = `${(currentFrame / 60).toFixed(2)}s / 10.0s`;
+        timeDisplay.textContent = `${(currentFrame / 60).toFixed(2)}s / ${(totalFrames / 60).toFixed(1)}s`;
       }
       lastTime = now;
       render(Math.floor(currentFrame));
@@ -919,7 +1155,7 @@
     });
     timeline.addEventListener('input', (e) => {
       currentFrame = parseFloat(e.target.value);
-      timeDisplay.textContent = `${(currentFrame / 60).toFixed(2)}s / 10.0s`;
+      timeDisplay.textContent = `${(currentFrame / 60).toFixed(2)}s / ${(totalFrames / 60).toFixed(1)}s`;
     });
     speedSelect.addEventListener('change', (e) => {
       playbackSpeed = parseFloat(e.target.value);
@@ -967,7 +1203,8 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `stickman_${activeChoreography}_fight.webm`;
+        const modeTag = isVertical ? '9x16_shorts' : '16x9';
+        a.download = `stickman_${activeChoreography}_${modeTag}.webm`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
