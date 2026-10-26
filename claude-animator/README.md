@@ -29,3 +29,4 @@ Simply open [`claude-animator/index.html`](index.html) in your browser (Google C
 2. Right-click [`index.html`](index.html) in VS Code.
 3. Select **"Show Preview"**.
 4. The animation will play interactively right inside a side tab in VS Code!
+
