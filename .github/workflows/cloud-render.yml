@@ -1,0 +1,44 @@
+name: Cloud Stickman Video Render
+
+on:
+  workflow_dispatch:
+    inputs:
+      composition:
+        description: 'Composition to Render'
+        required: true
+        default: 'StickmanFightRecreation'
+        type: choice
+        options:
+          - StickmanFightRecreation
+          - StickmanShowcase
+
+jobs:
+  render-video:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'stickman-engine/package-lock.json'
+
+      - name: Install Engine Dependencies
+        run: |
+          cd stickman-engine
+          npm ci
+
+      - name: Render Full 1080p MP4 on Cloud Runners
+        run: |
+          cd stickman-engine
+          npx remotion render src/index.ts ${{ github.event.inputs.composition }} out/stickman-video.mp4
+
+      - name: Upload Rendered MP4 Video
+        uses: actions/upload-artifact@v4
+        with:
+          name: stickman-video-mp4
+          path: stickman-engine/out/stickman-video.mp4
+          retention-days: 14
